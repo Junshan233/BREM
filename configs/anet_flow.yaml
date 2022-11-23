@@ -1,0 +1,73 @@
+dataset:
+  num_classes: 201
+  training:
+    video_mp4_path: datasets/activitynet/flow/train_val_npy_112
+    video_info_path: anet_annotations/video_info_train_val.json
+    video_anno_path: None
+    video_data_path: None
+    clip_length: 768
+    clip_stride: 768
+    crop_size: 96
+  testing:
+    video_mp4_path: datasets/activitynet/flow/train_val_npy_112
+    video_info_path: anet_annotations/video_info_train_val.json
+    video_anno_path: None
+    video_data_path: None
+    crop_size: 96
+    clip_length: 768
+    clip_stride: 768
+
+model:
+  in_channels: 2
+  freeze_bn: true
+  freeze_bn_affine: true
+  backbone_model: models/i3d_models/flow_imagenet.pt
+  featmap_strides: [8, 16, 32, 64, 128, 256]
+
+  model_type: BEMModule  # (BaseModel | BEMModule)
+  deform_conv_grad_mul: 0 # locs grad
+  use_quality_1: True
+  head:
+    # detection head type: `2stage_g` (REM) or `base`
+    type: 2stage_g
+    channel: 512
+  prop_g_args:
+    use_offset: True
+    use_confs: True
+    use_q: True
+  # cfg of BEM
+  BEM:
+    num_sample: 14
+    in_ratio: 4
+    out_ratio: 4
+    param_init: normal  # (default|normal)
+    windows_ratio: 0.0
+    windows_num: 22
+    map_type: adaptive_130
+    reduction_type: max
+    dim_fpn: 1024
+    dim_conv: 512
+    lambda_1: 50
+    # windows select in training phase
+    use_mask: True
+    match_topk: 2
+
+training:
+  batch_size: 1
+  learning_rate: 1e-4
+  weight_decay: 1e-4
+  max_epoch: 16
+  focal_loss: true
+  checkpoint_path: models/anet_flow/
+  random_seed: 2020
+  lr_step_size: 16
+  piou: 0.5
+
+testing:
+  conf_thresh: 0.01
+  top_k: 5000
+  nms_thresh: 0.5
+  nms_sigma: 0.85
+  checkpoint_path: models/anet_flow/checkpoint-6.ckpt
+  output_path: output/
+  output_json: detection_results.json
